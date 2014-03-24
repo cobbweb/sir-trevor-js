@@ -56,6 +56,7 @@ SirTrevor.Formatter = (function(){
           }
         });
     }
+    
   });
 
   Format.extend = extend; // Allow our Formatters to be extended.
