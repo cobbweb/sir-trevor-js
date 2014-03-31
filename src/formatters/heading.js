@@ -61,8 +61,8 @@
         // Ignore whitespace and <br> "paragraphs"
         if (heading.innerHTML.match(this.WHITESPACE_AND_BR) === null) {
           editor.createBlock('Heading', { text: heading.innerHTML }, addAt);
+          addAt += 1; // incremement index to account for each heading block
         }
-        addAt += 1; // incremement index to account for each heading block
       }, this);
 
       return addAt;
