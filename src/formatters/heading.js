@@ -50,7 +50,7 @@
       }
     },
 
-    removeParagraphs: function(paragraphs, blockInner) {
+    removeParagraphs: function(paragraphs) {
       _.each(paragraphs, function(p) {
         p.parentNode.removeChild(p);
       });
