@@ -19,7 +19,7 @@
     onClick: function() {
       var selection = document.getSelection();
 
-      if (selection.type !== 'Range' || !selection.rangeCount > 0) {
+      if (selection.type !== 'Range' || selection.rangeCount === 0) {
         return null; // no ranges
       }
 
