@@ -19,7 +19,7 @@
     onClick: function() {
       var selection = document.getSelection();
 
-      if (selection.type !== 'Range' || !selection.rangeCount > 0) {
+      if (selection.type !== 'Range' || selection.rangeCount === 0) {
         return null; // no ranges
       }
 
@@ -79,7 +79,7 @@
       }
     },
 
-    removeParagraphs: function(paragraphs, blockInner) {
+    removeParagraphs: function(paragraphs) {
       _.each(paragraphs, function(p) {
         p.parentNode.removeChild(p);
       });
@@ -90,8 +90,8 @@
         // Ignore whitespace and <br> "paragraphs"
         if (heading.innerHTML.match(this.WHITESPACE_AND_BR) === null) {
           editor.createBlock('Heading', { text: heading.innerHTML }, addAt);
+          addAt += 1; // incremement index to account for each heading block
         }
-        addAt += 1; // incremement index to account for each heading block
       }, this);
 
       return addAt;
