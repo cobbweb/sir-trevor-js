@@ -26,7 +26,7 @@
 <body>
   <form>
     <div class="errors"></div>
-    <textarea class="sir-trevor" name="content">{"data":[{"type":"text","data":{"text":"As busy as a cactus mate flamin pav. She'll be right khe sanh where his blood's worth bottling. Built like a brick sh*t house heaps lets throw a cracker.\n\nCome a freo no worries lets get some yakka. Get a dog up ya chuck a yewy piece of piss get a dog up ya vee dub.\n\nGrab us a postie with trent from punchy gutta. As dry as a ripper bloody gutful of sickie. As dry as a joey when as dry as a ciggies. Come a skite heaps wobbly. He hasn't got a trackies no worries lets throw a vinnie's. He hasn't got a bloke to as dry as a waratah.\n\nLets get some outback bloody he's got a massive bush bash. Flat out like a booze bus heaps you little ripper tucker.\n\nShe'll be right dill to lets get some rapt. Mad as a roo heaps gutful of slabs. She'll be right jillaroo flamin as cross as a pozzy. Gutful of aussie salute piece of piss flat out like a spag bol. She'll be right dunny heaps as cunning as a khe sanh. Get a dog up ya bities when it'll be holy dooley!. Lets get some rage on flamin flat out like a dunny.\n\nAs cunning as a spit the dummy when built like a gobful. Built like a brekkie flamin it'll be holden. Get a dog up ya cracker no dramas shazza got us some strides. As cross as a spit the dummy no worries mad as a aerial pingpong. He hasn't got a trackies mate ambo."}}]}</textarea>
+    <textarea class="sir-trevor" name="content">{"data":[{"type":"text","data":{"text":"As busy as a cactus mate flamin pav. She'll be right khe sanh where his blood's worth bottling. Built like a brick sh\\*t house heaps lets throw a cracker.\n\n"}},{"type":"heading","data":{"text":"Come a freo "}},{"type":"text","data":{"text":"no worries lets get some yakka. Get a dog up ya chuck a yewy piece of piss get a dog up ya vee dub.\n\nGrab us a postie with trent from punchy gutta. As dry as a ripper bloody gutful of sickie. As dry as a joey when as dry as a ciggies. Come a skite heaps wobbly. He hasn't got a trackies no worries lets throw a vinnie's. He hasn't got a bloke to as dry as a waratah.\n\nLets get some outback bloody he's got a massive bush bash. Flat out like a booze bus heaps you little ripper tucker.\n\nShe'll be right dill to lets get some raspt. Mad as a roo heaps gutful of slabs. She'll be right jillaroo flamin as cross as a pozzy. Gutful of aussie salute piece of piss flat out like a spag bol. She'll be right dunny heaps as cunning as a khe sanh. Get a dog up ya bities when it'll be holy dooley!. Lets get some rage on flamin flat out like a dunny.\n\nAs cunning as a spit the dummy when built like a gobful. Built like a brekkie flamin it'll be holden. Get a dog up ya cracker no dramas shazza got us some strides. As cross as a spit the dummy no worries mad as a aerial pingpong. He hasn't got a trackies mate ambo.\n"}}]}</textarea>
     <input type="submit" value="Submit">
   </form>
 
@@ -61,6 +61,9 @@
       });
 
       $('form').bind('submit', function(){
+        editor.onFormSubmit(false);
+        editor.store('save');
+        console.dir(editor.store('read'));
         return false;
       });
 

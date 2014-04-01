@@ -29,24 +29,53 @@
       var editor = SirTrevor.getInstance(block.getAttribute('data-instance'));
       var position = editor.getBlockPosition(block) + 1;
 
-      var paragraphsBeforeSelection = this.getParagraphsBeforeSelection(range, blockInner);
-      var paragraphsAfterSelection = this.getParagraphsAfterSelection(range, blockInner);
-      var newHeadings = this.getSelectedParagraphs(range, blockInner);
 
-      // Remove the headings and paragraps after from the current text block
-      this.removeParagraphs([].concat(paragraphsAfterSelection, newHeadings));
-
-      // Add a new heading block for each paragraph that was selected
-      position = this.addHeadingBlocks(newHeadings, position, editor);
-
-      // Move text after the selection into a new text block,
-      // after the heading block(s) we just created
-      var textAfter = this.convertParagraphsToText(paragraphsAfterSelection);
-      this.addTextBlock(textAfter, position, editor);
-
-      // Delete current block if it's now empty
-      if (this.isOnlyWhitespaceParagraphs(paragraphsBeforeSelection)) {
+      if (this.isActive()) {
+        //replace header block with text block and merge in if possible
+        console.log('removing header');
+        //create a text block from the contents of the exisiting header block
+        this.addTextBlock(blockInner.innerText, position, editor);
+        // remove the old header block
         editor.removeBlock(block.id);
+        var blocknumberTotal = editor.dataStore.data.length;
+        if (position === 1 && blocknumberTotal === position) {
+          //only one block, so add a new block  after this one
+
+        }
+        if (position !== 1 && blocknumberTotal === position) {
+          //multiple blocks, so add a new block  after this one
+
+        }
+
+        if (position === 1 && blocknumberTotal !== position) {
+          // new text block is the first, but not last so do not add a new block
+        }
+
+        if (position > 1) {
+          //block must merge into block above, as well as potentially below.
+        }
+      } else {
+        var paragraphsBeforeSelection = this.getParagraphsBeforeSelection(range, blockInner);
+        var paragraphsAfterSelection = this.getParagraphsAfterSelection(range, blockInner);
+        var newHeadings = this.getSelectedParagraphs(range, blockInner);
+
+
+        // Remove the headings and paragraps after from the current text block
+        this.removeParagraphs([].concat(paragraphsAfterSelection, newHeadings));
+
+        // Add a new heading block for each paragraph that was selected
+        position = this.addHeadingBlocks(newHeadings, position, editor);
+
+        // Move text after the selection into a new text block,
+        // after the heading block(s) we just created
+        var textAfter = this.convertParagraphsToText(paragraphsAfterSelection);
+        // create new header block from selected text
+        this.addTextBlock(textAfter, position, editor);
+
+        // Delete current block if it's now empty
+        if (this.isOnlyWhitespaceParagraphs(paragraphsBeforeSelection)) {
+          editor.removeBlock(block.id);
+        }
       }
     },
 
@@ -74,14 +103,14 @@
      */
     convertParagraphsToText: function(paragraphs) {
       return _.chain(paragraphs)
-        .filter(function(p) {
-          return p.innerHTML.match(this.WHITESPACE_AND_BR) === null;
-        }, this)
-        .map(function(p) {
-          return p.innerHTML;
-        })
-        .value() // get filtered array
-        .join('\n\n'); // to string;
+          .filter(function(p) {
+            return p.innerHTML.match(this.WHITESPACE_AND_BR) === null;
+          }, this)
+          .map(function(p) {
+            return p.innerHTML;
+          })
+          .value() // get filtered array
+          .join('\n\n'); // to string;
     },
 
     isOnlyWhitespaceParagraphs: function(paragraphs) {
@@ -166,6 +195,18 @@
         block = block.parentNode;
       }
       return block;
+    },
+
+    isActive: function() {
+      var selection = document.getSelection();
+
+      if (selection.rangeCount > 0) {
+        var range = selection.getRangeAt(0);
+        var block = this._getSelectedBlock(range);
+        return block.dataset.type === SirTrevor.Blocks.Heading.prototype.type;
+      } else {
+        return false;
+      }
     }
 
   });
