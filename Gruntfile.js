@@ -29,7 +29,7 @@ module.exports = function(grunt) {
                    'bower_components/underscore/underscore.js',
                    'bower_components/Eventable/eventable.js'],
           specs : 'spec/javascripts/**/*.spec.js',
-          helpers : ['spec/helpers/*.js',
+          helpers : ['spec/javascripts/helpers/*.js',
                      'bower_components/sinonjs/sinon.js',
                      'bower_components/jasmine-sinon/lib/jasmine-sinon.js']
         }
