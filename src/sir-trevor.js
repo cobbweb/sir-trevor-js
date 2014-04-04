@@ -128,6 +128,8 @@
   //= blocks
   /* Default Formatters */
   //= formatters
+  // /* Default Reconfigurers */
+  //= reconfigurers
   /* Marker */
   //= block-control.js
   //= block-controls.js
