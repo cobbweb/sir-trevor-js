@@ -4,7 +4,7 @@
  * Released under the MIT license
  * www.opensource.org/licenses/MIT
  *
- * 2014-04-01
+ * 2014-04-09
  */
 
 (function ($, _){
@@ -48,7 +48,10 @@
     required: [],
     uploadUrl: '/attachments',
     baseImageUrl: '/sir-trevor-uploads/',
-    errorsContainer: undefined
+    errorsContainer: undefined,
+    toMarkdown: {
+      aggresiveHTMLStrip: false
+    }
   };
 
   SirTrevor.BlockMixins = {};
@@ -508,19 +511,19 @@
   
     block.resetMessages();
   
-    var callbackSuccess = function(data){
+    var callbackSuccess = function(){
       SirTrevor.log('Upload callback called');
   
       if (!_.isUndefined(success) && _.isFunction(success)) {
-        _.bind(success, block)(data);
+        success.apply(block, arguments);
       }
     };
   
-    var callbackError = function(jqXHR, status, errorThrown){
+    var callbackError = function(){
       SirTrevor.log('Upload callback error called');
   
       if (!_.isUndefined(error) && _.isFunction(error)) {
-        _.bind(error, block)(status);
+        error.apply(block, arguments);
       }
     };
   
@@ -774,7 +777,11 @@
     }
   
     // Strip remaining HTML
-    markdown = markdown.replace(/<\/?[^>]+(>|$)/g, "");
+    if (SirTrevor.DEFAULTS.toMarkdown.aggresiveHTMLStrip) {
+      markdown = markdown.replace(/<\/?[^>]+(>|$)/g, "");
+    } else {
+      markdown = markdown.replace(/<(?=\S)\/?[^>]+(>|$)/ig, "");
+    }
   
     return markdown;
   };
@@ -794,14 +801,14 @@
   
     addQueuedItem: function(name, deffered) {
       SirTrevor.log("Adding queued item for " + this.blockID + " called " + name);
-      SirTrevor.EventBus.trigger("onUploadStart");
+      SirTrevor.EventBus.trigger("onUploadStart", this.blockID);
   
       this._queued.push({ name: name, deffered: deffered });
     },
   
     removeQueuedItem: function(name) {
       SirTrevor.log("Removing queued item for " + this.blockID + " called " + name);
-      SirTrevor.EventBus.trigger("onUploadStop");
+      SirTrevor.EventBus.trigger("onUploadStop", this.blockID);
   
       this._queued = _.reject(this._queued, function(queued){ return queued.name == name; });
     },
@@ -895,7 +902,7 @@
         this.onDrop(e.dataTransfer);
       }
   
-      SirTrevor.EventBus.trigger('block:content:dropped');
+      SirTrevor.EventBus.trigger('block:content:dropped', this.blockID);
     }
   
   };
@@ -1046,6 +1053,7 @@
   
     var BlockReorder = function(block_element) {
       this.$block = block_element;
+      this.blockID = this.$block.attr('id');
   
       this._ensureElement();
       this._bindFunctions();
@@ -1080,7 +1088,7 @@
       },
   
       onMouseDown: function() {
-        SirTrevor.EventBus.trigger("block:reorder:down");
+        SirTrevor.EventBus.trigger("block:reorder:down", this.blockID);
       },
   
       onDrop: function(ev) {
@@ -1104,14 +1112,14 @@
         var btn = $(ev.currentTarget).parent();
   
         ev.originalEvent.dataTransfer.setDragImage(this.$block[0], btn.position().left, btn.position().top);
-        ev.originalEvent.dataTransfer.setData('Text', this.$block.attr('id'));
+        ev.originalEvent.dataTransfer.setData('Text', this.blockID);
   
-        SirTrevor.EventBus.trigger("block:reorder:dragstart");
+        SirTrevor.EventBus.trigger("block:reorder:dragstart", this.blockID);
         this.$block.addClass('st-block--dragging');
       },
   
       onDragEnd: function(ev) {
-        SirTrevor.EventBus.trigger("block:reorder:dragend");
+        SirTrevor.EventBus.trigger("block:reorder:dragend", this.blockID);
         this.$block.removeClass('st-block--dragging');
       },
   
@@ -1267,7 +1275,7 @@
   
     beforeLoadingData: function() {
       SirTrevor.log("loadData for " + this.blockID);
-      SirTrevor.EventBus.trigger("editor/block/loadData");
+      SirTrevor.EventBus.trigger("block:loadData", this.blockID);
       this.loadData(this.getData());
     },
   
@@ -1732,13 +1740,10 @@
       getSelectionForFormatter: function() {
         _.defer(function(){
           var selection = window.getSelection(),
-             selectionStr = selection.toString().trim();
+             selectionStr = selection.toString().trim(),
+             eventType = (selectionStr === '') ? 'hide' : 'position';
   
-          if (selectionStr === '') {
-            SirTrevor.EventBus.trigger('formatter:hide');
-          } else {
-            SirTrevor.EventBus.trigger('formatter:positon');
-          }
+          SirTrevor.EventBus.trigger('formatter:' + eventType , this);
         });
        },
   
@@ -1919,6 +1924,16 @@
       }, this));
     },
   
+    onUploadSuccess : function(data) {
+      this.setData(data);
+      this.ready();
+    },
+  
+    onUploadError : function(jqXHR, status, errorThrown){
+      this.addMessage(i18n.t('blocks:image:upload_error'));
+      this.ready();
+    },
+  
     onDrop: function(transferData){
       var file = transferData.files[0],
           urlAPI = (typeof URL !== "undefined") ? URL : (typeof webkitURL !== "undefined") ? webkitURL : null;
@@ -1930,17 +1945,7 @@
         this.$inputs.hide();
         this.$editor.html($('<img>', { src: urlAPI.createObjectURL(file) })).show();
   
-        this.uploader(
-          file,
-          function(data) {
-            this.setData(data);
-            this.ready();
-          },
-          function(error){
-            this.addMessage(i18n.t('blocks:image:upload_error'));
-            this.ready();
-          }
-        );
+        this.uploader(file, this.onUploadSuccess, this.onUploadError);
       }
     }
   });
@@ -2279,47 +2284,80 @@
       keyCode: 49,
       text: 'H',
   
-      WHITESPACE_AND_BR: new RegExp('^(?:\s*<br\s*/?>)*\s*$', 'gim'),
-  
-      /**
-       * These constant are few use with Range.comparePoint
-       * https://developer.mozilla.org/en-US/docs/Web/API/range.comparePoint
-       */
-      TEXT_BEFORE: -1,
-      TEXT_AFTER: 1,
   
       onClick: function() {
         var selection = document.getSelection();
-  
         if (selection.type !== 'Range' || selection.rangeCount === 0) {
           return null; // no ranges
         }
   
         var range = selection.getRangeAt(0);
-        var block = this._getSelectedBlock(range);
-        var blockInner = block.getElementsByClassName('st-text-block')[0];
-        var editor = SirTrevor.getInstance(block.getAttribute('data-instance'));
-        var position = editor.getBlockPosition(block) + 1;
   
-        var paragraphsBeforeSelection = this.getParagraphsBeforeSelection(range, blockInner);
-        var paragraphsAfterSelection = this.getParagraphsAfterSelection(range, blockInner);
-        var newHeadings = this.getSelectedParagraphs(range, blockInner);
-  
-        // Remove the headings and paragraps after from the current text block
-        this.removeParagraphs([].concat(paragraphsAfterSelection, newHeadings));
-  
-        // Add a new heading block for each paragraph that was selected
-        position = this.addHeadingBlocks(newHeadings, position, editor);
-  
-        // Move text after the selection into a new text block,
-        // after the heading block(s) we just created
-        var textAfter = this.convertParagraphsToText(paragraphsAfterSelection);
-        this.addTextBlock(textAfter, position, editor);
-  
-        // Delete current block if it's now empty
-        if (this.isOnlyWhitespaceParagraphs(paragraphsBeforeSelection)) {
-          editor.removeBlock(block.id);
+        if (this.isActive()) {
+          SirTrevor.TextAndHeader.merge(range);
+        } else {
+          SirTrevor.TextAndHeader.split(range);
         }
+      },
+  
+      addHeadingBlocks: function(paragraphs, addAt, editor) {
+        return SirTrevor.TextAndHeader.addHeadingBlocks(paragraphs, addAt, editor);
+      },
+  
+      /**
+       * Sometimes range containers will be text fragments
+       * or HTML elements
+       */
+      _getRangeContainerElement: function(container) {
+        if (container.nodeName === '#text') {
+          return container.parentNode;
+        }
+  
+        return container;
+      },
+  
+      _getSelectedBlock: function(range) {
+        var block = this._getRangeContainerElement(range.startContainer);
+        while (!block.classList.contains('st-block')) {
+          block = block.parentNode;
+        }
+        return block;
+      },
+  
+      isActive: function() {
+        var selection = document.getSelection();
+        if (selection.rangeCount > 0) {
+          var range = selection.getRangeAt(0);
+          var block = this._getSelectedBlock(range);
+          return block.getAttribute('data-type') === SirTrevor.Blocks.Heading.prototype.type;
+        } else {
+          return false;
+        }
+      }
+  
+    });
+  
+    SirTrevor.Formatters.Heading = new Heading();
+  
+  }(SirTrevor, document));
+  // /* Default Reconfigurers */
+  SirTrevor.BlockReconfigurer = (function() {
+  
+    var Reconfigurer = function(options) {
+      this.initialize.apply(this, arguments);
+    };
+  
+    _.extend(Reconfigurer.prototype, {
+  
+      initialize: function() {
+      },
+  
+      isTextBlock: function(block) {
+        return block.data().type === SirTrevor.Blocks.Text.prototype.type;
+      },
+  
+      getBlockFromPosition: function(editor, position) {
+        return editor.$wrapper.find('.st-block').eq(position);
       },
   
       removeParagraphs: function(paragraphs) {
@@ -2346,14 +2384,14 @@
        */
       convertParagraphsToText: function(paragraphs) {
         return _.chain(paragraphs)
-          .filter(function(p) {
-            return p.innerHTML.match(this.WHITESPACE_AND_BR) === null;
-          }, this)
-          .map(function(p) {
-            return p.innerHTML;
-          })
-          .value() // get filtered array
-          .join('\n\n'); // to string;
+            .filter(function(p) {
+              return p.innerHTML.match(this.WHITESPACE_AND_BR) === null;
+            }, this)
+            .map(function(p) {
+              return p.innerHTML;
+            })
+            .value() // get filtered array
+            .join('\n\n'); // to string;
       },
   
       isOnlyWhitespaceParagraphs: function(paragraphs) {
@@ -2363,7 +2401,7 @@
       },
   
       addTextBlock: function(text, addAt, editor) {
-        editor.createBlock('Text', { text: text }, addAt);
+        return editor.createBlock('Text', { text: text }, addAt);
       },
   
       /**
@@ -2438,13 +2476,125 @@
           block = block.parentNode;
         }
         return block;
+      },
+  
+      merge: function(range) {
+  
+      },
+  
+      split: function(range) {
+  
       }
   
     });
   
-    SirTrevor.Formatters.Heading = new Heading();
+    Reconfigurer.extend = extend; // Allow our reconfigurer to be extended.
   
-  }(SirTrevor, document));
+    return Reconfigurer;
+  
+  })();
+  (function(SirTrevor) {
+  
+    var TextAndHeader = SirTrevor.BlockReconfigurer.extend({
+  
+      WHITESPACE_AND_BR: new RegExp('^(?:\s*<br\s*/?>)*\s*$', 'gim'),
+  
+      /**
+       * These constant are few use with Range.comparePoint
+       * https://developer.mozilla.org/en-US/docs/Web/API/range.comparePoint
+       */
+      TEXT_BEFORE: -1,
+      TEXT_AFTER: 1,
+  
+  
+      _mergeTextBlocks: function(editor, firstBlock, secondBlock, blockPositionToInsert) {
+        var textFromPreviousBlock = firstBlock.find('.st-text-block').html();
+        var textFromNewlyCreatedTextBlock = secondBlock.find('.st-text-block').html();
+        var textForNewBlock = textFromPreviousBlock + '<div><br></div>' + textFromNewlyCreatedTextBlock;
+        this.addTextBlock(textForNewBlock, blockPositionToInsert, editor);
+        editor.removeBlock(firstBlock.attr('id'));
+        editor.removeBlock(secondBlock.attr('id'));
+      },
+  
+      _mergeIfTextBlock: function(editor, blockToCheck, firstBlock, secondBlock, blockPosition) {
+        if (this.isTextBlock(blockToCheck)) {
+          this._mergeTextBlocks(editor, firstBlock, secondBlock, blockPosition);
+        }
+      },
+  
+      merge: function(range) {
+        var block = this._getSelectedBlock(range);
+        var blockInner = block.getElementsByClassName('st-text-block')[0];
+        var editor = SirTrevor.getInstance(block.getAttribute('data-instance'));
+        var blockPosition = editor.getBlockPosition(block);
+  
+        //create a text block from the contents of the exisiting header block
+        this.addTextBlock(blockInner.innerText, blockPosition, editor);
+  
+        // remove the old header block
+        editor.removeBlock(block.id);
+  
+        var totalNumberOfBlocks = editor.blocks.length;
+        if (totalNumberOfBlocks === 1) {
+          return;
+        }
+        var newlyCreatedTextBlock = this.getBlockFromPosition(editor, blockPosition);
+        var previousBlock = this.getBlockFromPosition(editor, blockPosition - 1);
+        var nextBlock = this.getBlockFromPosition(editor, blockPosition + 1);
+  
+        if (totalNumberOfBlocks === (blockPosition + 1)) {
+          //merge into the block above
+          this._mergeIfTextBlock(editor, previousBlock, previousBlock, newlyCreatedTextBlock, blockPosition);
+          return;
+        }
+  
+        if (blockPosition === 0) {
+          // if block below is not a a heading then merge into it
+          this._mergeIfTextBlock(editor, nextBlock, newlyCreatedTextBlock, nextBlock, blockPosition);
+        } else {
+          // merge top and bottom blocks
+          this._mergeIfTextBlock(editor, nextBlock, newlyCreatedTextBlock, nextBlock, blockPosition);
+          newlyCreatedTextBlock = this.getBlockFromPosition(editor, blockPosition);
+          this._mergeIfTextBlock(editor, previousBlock, previousBlock, newlyCreatedTextBlock, blockPosition);
+        }
+      },
+  
+      split: function(range) {
+        var block = this._getSelectedBlock(range);
+        var blockInner = block.getElementsByClassName('st-text-block')[0];
+        var editor = SirTrevor.getInstance(block.getAttribute('data-instance'));
+        var position = editor.getBlockPosition(block) + 1;
+        var paragraphsBeforeSelection = this.getParagraphsBeforeSelection(range, blockInner);
+        var paragraphsAfterSelection = this.getParagraphsAfterSelection(range, blockInner);
+        var newHeadings = this.getSelectedParagraphs(range, blockInner);
+  
+        // Remove the headings and paragraphs after from the current text block
+        this.removeParagraphs([].concat(paragraphsAfterSelection, newHeadings));
+  
+        // Add a new heading block for each paragraph that was selected
+        position = this.addHeadingBlocks(newHeadings, position, editor);
+  
+        // Move text after the selection into a new text block,
+        // after the heading block(s) we just created
+        var totalNumberOfBlocks = editor.blocks.length;
+        var textAfter = this.convertParagraphsToText(paragraphsAfterSelection);
+        if (textAfter || ((position) === totalNumberOfBlocks)) {
+          this.addTextBlock(textAfter, position, editor);
+        }
+  
+        // Delete current block if it's now empty
+        if (this.isOnlyWhitespaceParagraphs(paragraphsBeforeSelection)) {
+          editor.removeBlock(block.id);
+        }
+      }
+    });
+  
+    /*
+     Create our formatters and add a static reference to them
+     */
+    SirTrevor.TextAndHeader = new TextAndHeader();
+  
+  }(SirTrevor));
   /* Marker */
   SirTrevor.BlockControl = (function(){
   
@@ -2783,11 +2933,11 @@
         this._bindFunctions();
   
         this.store("create");
-        
+  
         SirTrevor.instances.push(this);
-        
+  
         this.build();
-        
+  
         SirTrevor.bindFormSubmit(this.$form);
       },
   
@@ -3059,7 +3209,7 @@
   
         block.remove();
   
-        SirTrevor.EventBus.trigger("block:remove");
+        SirTrevor.EventBus.trigger("block:remove", block);
         this.triggerBlockCountUpdate();
   
         this.$wrapper.toggleClass('st--block-limit-reached', this._blockLimitReached());
