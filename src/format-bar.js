@@ -42,6 +42,7 @@ SirTrevor.FormatBar = (function(){
 
       this.$b = $(document);
       this.$el.bind('click', '.st-format-btn', this.onFormatButtonClick);
+      SirTrevor.EventBus.on("formatbar:hide", this.hide);
     },
 
     hide: function() {

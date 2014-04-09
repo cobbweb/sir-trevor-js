@@ -38,7 +38,7 @@
 
       // remove the old header block
       editor.removeBlock(block.id);
-      editor.formatBar.hide();
+      SirTrevor.EventBus.trigger("formatbar:hide", editor.formatBar);
 
       var totalNumberOfBlocks = editor.blocks.length;
       if (totalNumberOfBlocks === 1) {
@@ -73,7 +73,7 @@
       var paragraphsBeforeSelection = this.getParagraphsBeforeSelection(range, blockInner);
       var paragraphsAfterSelection = this.getParagraphsAfterSelection(range, blockInner);
       var newHeadings = this.getSelectedParagraphs(range, blockInner);
-      editor.formatBar.hide();
+      SirTrevor.EventBus.trigger("formatbar:hide", editor.formatBar);
 
       // Remove the headings and paragraphs after from the current text block
       this.removeParagraphs([].concat(paragraphsAfterSelection, newHeadings));
