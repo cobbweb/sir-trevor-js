@@ -133,14 +133,6 @@ SirTrevor.BlockReconfigurer = (function() {
         block = block.parentNode;
       }
       return block;
-    },
-
-    merge: function(range) {
-
-    },
-
-    split: function(range) {
-
     }
 
   });

@@ -27,10 +27,7 @@
       }
     },
 
-    merge: function(range) {
-      var block = this._getSelectedBlock(range);
-      var blockInner = block.getElementsByClassName('st-text-block')[0];
-      var editor = SirTrevor.getInstance(block.getAttribute('data-instance'));
+    merge: function(range, block, blockInner, editor) {
       var blockPosition = editor.getBlockPosition(block);
 
       //create a text block from the contents of the exisiting header block
@@ -38,7 +35,6 @@
 
       // remove the old header block
       editor.removeBlock(block.id);
-      SirTrevor.EventBus.trigger("formatbar:hide", editor.formatBar);
 
       var totalNumberOfBlocks = editor.blocks.length;
       if (totalNumberOfBlocks === 1) {
@@ -65,15 +61,11 @@
       }
     },
 
-    split: function(range) {
-      var block = this._getSelectedBlock(range);
-      var blockInner = block.getElementsByClassName('st-text-block')[0];
-      var editor = SirTrevor.getInstance(block.getAttribute('data-instance'));
+    split: function(range, block, blockInner, editor) {
       var position = editor.getBlockPosition(block) + 1;
       var paragraphsBeforeSelection = this.getParagraphsBeforeSelection(range, blockInner);
       var paragraphsAfterSelection = this.getParagraphsAfterSelection(range, blockInner);
       var newHeadings = this.getSelectedParagraphs(range, blockInner);
-      SirTrevor.EventBus.trigger("formatbar:hide", editor.formatBar);
 
       // Remove the headings and paragraphs after from the current text block
       this.removeParagraphs([].concat(paragraphsAfterSelection, newHeadings));

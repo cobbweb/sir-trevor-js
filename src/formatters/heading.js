@@ -11,16 +11,19 @@
     onClick: function() {
       var selection = document.getSelection();
       if (selection.type !== 'Range' || selection.rangeCount === 0) {
-        return null; // no ranges
+        return; // no ranges
       }
-
       var range = selection.getRangeAt(0);
+      var block = this._getSelectedBlock(range);
+      var blockInner = block.getElementsByClassName('st-text-block')[0];
+      var editor = SirTrevor.getInstance(block.getAttribute('data-instance'));
 
       if (this.isActive()) {
-        SirTrevor.TextAndHeader.merge(range);
+        SirTrevor.TextAndHeader.merge(range, block, blockInner, editor);
       } else {
-        SirTrevor.TextAndHeader.split(range);
+        SirTrevor.TextAndHeader.split(range, block, blockInner, editor);
       }
+      SirTrevor.EventBus.trigger("formatbar:hide", editor);
     },
 
     addHeadingBlocks: function(paragraphs, addAt, editor) {
