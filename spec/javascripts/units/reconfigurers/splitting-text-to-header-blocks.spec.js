@@ -67,7 +67,7 @@ describe('Formatters.Heading', function() {
       });
     });
 
-    describe("Selecting a single paragraph, from the first text block, followed by a header block", function() {
+    describe("Selecting the single paragraph, from the first text block, followed by a header block", function() {
 
       beforeEach(function() {
         this.editor.createBlock('text', { text: 'This was a text section!' }, 0);
@@ -76,12 +76,14 @@ describe('Formatters.Heading', function() {
         Heading.onClick();
       });
 
-      it('should have a header block followed by the existing heading block', function() {
-        expect(this.editor.blocks.length).toBe(2);
+      it('should have a header block followed by an injected empty text block and then the existing heading block', function() {
+        expect(this.editor.blocks.length).toBe(3);
         expect(BlockUtils.getBlockType(this.editor, 0)).toBe('Heading');
-        expect(BlockUtils.getBlockType(this.editor, 1)).toBe('Heading');
+        expect(BlockUtils.getBlockType(this.editor, 1)).toBe('text');
+        expect(BlockUtils.getBlockType(this.editor, 2)).toBe('Heading');
         expect(BlockUtils.getBlockTextFromPosition(this.editor, 0)).toBe('This was a text section!');
-        expect(BlockUtils.getBlockTextFromPosition(this.editor, 1)).toBe('This is a heading section!');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 1)).toBe('');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 2)).toBe('This is a heading section!');
       });
     });
 

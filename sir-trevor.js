@@ -4,7 +4,7 @@
  * Released under the MIT license
  * www.opensource.org/licenses/MIT
  *
- * 2014-04-10
+ * 2014-04-11
  */
 
 (function ($, _){
@@ -2352,11 +2352,24 @@
   
     _.extend(Reconfigurer.prototype, {
   
+      WHITESPACE_AND_BR: new RegExp('^(?:\s*<br\s*/?>)*\s*$', 'gim'),
+  
+      /**
+       * These constant are few use with Range.comparePoint
+       * https://developer.mozilla.org/en-US/docs/Web/API/range.comparePoint
+       */
+      TEXT_BEFORE: -1,
+      TEXT_AFTER: 1,
+  
       initialize: function() {
       },
   
       isTextBlock: function(block) {
         return block.data().type === SirTrevor.Blocks.Text.prototype.type;
+      },
+  
+      isHeadingBlock: function(block) {
+        return block.data().type === SirTrevor.Blocks.Heading.prototype.type;
       },
   
       getBlockFromPosition: function(editor, position) {
@@ -2492,16 +2505,6 @@
   
     var TextAndHeader = SirTrevor.BlockReconfigurer.extend({
   
-      WHITESPACE_AND_BR: new RegExp('^(?:\s*<br\s*/?>)*\s*$', 'gim'),
-  
-      /**
-       * These constant are few use with Range.comparePoint
-       * https://developer.mozilla.org/en-US/docs/Web/API/range.comparePoint
-       */
-      TEXT_BEFORE: -1,
-      TEXT_AFTER: 1,
-  
-  
       _mergeTextBlocks: function(editor, firstBlock, secondBlock, blockPositionToInsert) {
         var textFromPreviousBlock = this.convertParagraphsToText(firstBlock.find('.st-text-block').children());
         var textFromNewlyCreatedTextBlock = this.convertParagraphsToText(secondBlock.find('.st-text-block').children());
@@ -2551,6 +2554,15 @@
         }
       },
   
+      consecutiveHeadingBlockCheck: function(editor) {
+        var totalNumberOfBlocks = editor.blocks.length;
+        var lastButOneBlock = this.getBlockFromPosition(editor, totalNumberOfBlocks - 1);
+        var lastBlock = this.getBlockFromPosition(editor, totalNumberOfBlocks - 2);
+        if (this.isHeadingBlock(lastButOneBlock) && this.isHeadingBlock(lastBlock)) {
+          this.addTextBlock("", totalNumberOfBlocks - 1, editor);
+        }
+      },
+  
       split: function(range, block, blockInner, editor) {
         var position = editor.getBlockPosition(block) + 1;
         var paragraphsBeforeSelection = this.getParagraphsBeforeSelection(range, blockInner);
@@ -2571,10 +2583,12 @@
           this.addTextBlock(textAfter, position, editor);
         }
   
-        // Delete current block if it's now empty
+        // Delete current block if it's now empty, unless following block is a heading block
         if (this.isOnlyWhitespaceParagraphs(paragraphsBeforeSelection)) {
           editor.removeBlock(block.id);
         }
+  
+        this.consecutiveHeadingBlockCheck(editor);
       }
     });
   

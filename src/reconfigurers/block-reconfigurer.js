@@ -6,11 +6,24 @@ SirTrevor.BlockReconfigurer = (function() {
 
   _.extend(Reconfigurer.prototype, {
 
+    WHITESPACE_AND_BR: new RegExp('^(?:\s*<br\s*/?>)*\s*$', 'gim'),
+
+    /**
+     * These constant are few use with Range.comparePoint
+     * https://developer.mozilla.org/en-US/docs/Web/API/range.comparePoint
+     */
+    TEXT_BEFORE: -1,
+    TEXT_AFTER: 1,
+
     initialize: function() {
     },
 
     isTextBlock: function(block) {
       return block.data().type === SirTrevor.Blocks.Text.prototype.type;
+    },
+
+    isHeadingBlock: function(block) {
+      return block.data().type === SirTrevor.Blocks.Heading.prototype.type;
     },
 
     getBlockFromPosition: function(editor, position) {
