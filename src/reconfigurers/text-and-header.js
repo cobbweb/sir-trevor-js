@@ -13,9 +13,12 @@
 
 
     _mergeTextBlocks: function(editor, firstBlock, secondBlock, blockPositionToInsert) {
-      var textFromPreviousBlock = firstBlock.find('.st-text-block').html();
-      var textFromNewlyCreatedTextBlock = secondBlock.find('.st-text-block').html();
-      var textForNewBlock = textFromPreviousBlock + '<div><br></div>' + textFromNewlyCreatedTextBlock;
+      var textFromPreviousBlock = this.convertParagraphsToText(firstBlock.find('.st-text-block').children());
+      var textFromNewlyCreatedTextBlock = this.convertParagraphsToText(secondBlock.find('.st-text-block').children());
+      console.log('textFromPreviousBlock', textFromPreviousBlock);
+      console.log('textFromNewlyCreatedTextBlock', textFromNewlyCreatedTextBlock);
+      var textForNewBlock = textFromPreviousBlock + '\n\n' + textFromNewlyCreatedTextBlock;
+      console.log('other way.......... '+this.convertParagraphsToText(firstBlock.find('.st-text-block').children())+this.convertParagraphsToText(secondBlock.find('.st-text-block').children()));
       this.addTextBlock(textForNewBlock, blockPositionToInsert, editor);
       editor.removeBlock(firstBlock.attr('id'));
       editor.removeBlock(secondBlock.attr('id'));
