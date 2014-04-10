@@ -32,6 +32,23 @@ describe('Formatters.Heading', function() {
       });
     });
 
+    describe("Selecting the first paragraph, from the two paragraphs, from this solitary text block", function() {
+
+      beforeEach(function() {
+        this.editor.createBlock('text', { text: 'This is the first section that will become a heading block!\n\nThis section will become the second (text) block' }, 0);
+        BlockUtils.setSelection(this.editor, 0, 0);
+        Heading.onClick();
+      });
+
+      it('should have a header block followed by an empty text block', function() {
+        expect(this.editor.blocks.length).toBe(2);
+        expect(BlockUtils.getBlockType(this.editor, 0)).toBe('Heading');
+        expect(BlockUtils.getBlockType(this.editor, 1)).toBe('text');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 0)).toBe('This is the first section that will become a heading block!');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 1)).toBe('This section will become the second (text) block');
+      });
+    });
+
     describe("Selecting a single paragraph, from the first text block, out of two", function() {
 
       beforeEach(function() {

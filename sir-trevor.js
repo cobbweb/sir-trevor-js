@@ -2290,7 +2290,6 @@
         if (selection.type !== 'Range' || selection.rangeCount === 0) {
           return; // no ranges
         }
-  
         var range = selection.getRangeAt(0);
         var block = this._getSelectedBlock(range);
         var blockInner = block.getElementsByClassName('st-text-block')[0];
@@ -2302,7 +2301,6 @@
           SirTrevor.TextAndHeader.split(range, block, blockInner, editor);
         }
         SirTrevor.EventBus.trigger("formatbar:hide", editor);
-  
       },
   
       addHeadingBlocks: function(paragraphs, addAt, editor) {
@@ -2558,7 +2556,6 @@
         var paragraphsBeforeSelection = this.getParagraphsBeforeSelection(range, blockInner);
         var paragraphsAfterSelection = this.getParagraphsAfterSelection(range, blockInner);
         var newHeadings = this.getSelectedParagraphs(range, blockInner);
-        SirTrevor.EventBus.trigger("formatbar:hide", editor.formatBar);
   
         // Remove the headings and paragraphs after from the current text block
         this.removeParagraphs([].concat(paragraphsAfterSelection, newHeadings));
