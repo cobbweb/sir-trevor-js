@@ -5,7 +5,16 @@
     _mergeTextBlocks: function(editor, firstBlock, secondBlock, blockPositionToInsert) {
       var textFromPreviousBlock = this.convertParagraphsToText(firstBlock.find('.st-text-block').children());
       var textFromNewlyCreatedTextBlock = this.convertParagraphsToText(secondBlock.find('.st-text-block').children());
-      var textForNewBlock = textFromPreviousBlock + '\n\n' + textFromNewlyCreatedTextBlock;
+
+      var textForNewBlock = '';
+      if (textFromPreviousBlock.length > 0 && textFromNewlyCreatedTextBlock.length > 0) {
+          textForNewBlock = textFromPreviousBlock + '\n\n' + textFromNewlyCreatedTextBlock;
+      } else if (textFromPreviousBlock.length == 0 && textFromNewlyCreatedTextBlock.length > 0) {
+          textForNewBlock = textFromNewlyCreatedTextBlock;
+      } else if (textFromPreviousBlock.length > 0 && textFromNewlyCreatedTextBlock.length == 0) {
+          textForNewBlock = textFromPreviousBlock;
+      }
+
       this.addTextBlock(textForNewBlock, blockPositionToInsert, editor);
       editor.removeBlock(firstBlock.attr('id'));
       editor.removeBlock(secondBlock.attr('id'));

@@ -45,6 +45,22 @@ describe("Reconfiguring blocks", function() {
       });
     });
 
+    describe('merging a header block, which is followed by an empty text block', function() {
+
+      beforeEach(function() {
+        this.editor.createBlock('Heading', { text: 'This is a heading!' }, 0);
+        this.editor.createBlock('text', { text: '' }, 1);
+        BlockUtils.setSelection(this.editor, 0, 0);
+        Heading.onClick();
+      });
+
+      it('should have one text block', function() {
+        expect(this.editor.blocks.length).toBe(1);
+        expect(BlockUtils.getBlockType(this.editor, 0)).toBe('text');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 0)).toBe('This is a heading!');
+      });
+    });
+
     describe('merging the first out of two header blocks', function() {
 
       beforeEach(function() {
@@ -97,6 +113,22 @@ describe("Reconfiguring blocks", function() {
       });
     });
 
+    describe('merging the second block, where the first is an empty text block', function() {
+
+      beforeEach(function() {
+        this.editor.createBlock('text', { text: '' }, 0);
+        this.editor.createBlock('Heading', { text: 'This is a heading!' }, 1);
+        BlockUtils.setSelection(this.editor, 1, 0);
+        Heading.onClick();
+      });
+
+      it('should have one text block only', function() {
+        expect(this.editor.blocks.length).toBe(1);
+        expect(BlockUtils.getBlockType(this.editor, 0)).toBe('text');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 0)).toBe('This is a heading!');
+      });
+    });
+
     describe('merging the second block, where all 3 blocks are heading blocks', function() {
 
       beforeEach(function() {
@@ -132,6 +164,57 @@ describe("Reconfiguring blocks", function() {
         expect(this.editor.blocks.length).toBe(1);
         expect(BlockUtils.getBlockType(this.editor, 0)).toBe('text');
         expect(BlockUtils.getBlockTextFromPosition(this.editor, 0)).toBe('First text block\n\nWas a heading!\n\nSecond text block');
+      });
+    });
+
+    describe('merging the second block, where the first and third are already text blocks with empty contents in first', function() {
+
+      beforeEach(function() {
+        this.editor.createBlock('text', { text: '' }, 0);
+        this.editor.createBlock('Heading', { text: 'Was a heading!' }, 1);
+        this.editor.createBlock('text', { text: 'Second text block' }, 2);
+        BlockUtils.setSelection(this.editor, 1, 0);
+        Heading.onClick();
+      });
+
+      it('should now have one text block only', function() {
+        expect(this.editor.blocks.length).toBe(1);
+        expect(BlockUtils.getBlockType(this.editor, 0)).toBe('text');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 0)).toBe('Was a heading!\n\nSecond text block');
+      });
+    });
+
+    describe('merging the second block, where the first and third are already text blocks with empty contents in third', function() {
+
+      beforeEach(function() {
+        this.editor.createBlock('text', { text: 'First text block' }, 0);
+        this.editor.createBlock('Heading', { text: 'Was a heading!' }, 1);
+        this.editor.createBlock('text', { text: '' }, 2);
+        BlockUtils.setSelection(this.editor, 1, 0);
+        Heading.onClick();
+      });
+
+      it('should now have one text block only', function() {
+        expect(this.editor.blocks.length).toBe(1);
+        expect(BlockUtils.getBlockType(this.editor, 0)).toBe('text');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 0)).toBe('First text block\n\nWas a heading!');
+      });
+    });
+
+    describe('merging the second block, where the first and third are blank text blocks', function() {
+
+      beforeEach(function() {
+        this.editor.createBlock('text', { text: '' }, 0);
+        this.editor.createBlock('Heading', { text: 'Was a heading!' }, 1);
+        this.editor.createBlock('text', { text: '' }, 2);
+        BlockUtils.setSelection(this.editor, 1, 0);
+        Heading.onClick();
+      });
+
+      it('should now have one text block only', function() {
+        expect(this.editor.blocks.length).toBe(1);
+        expect(BlockUtils.getBlockType(this.editor, 0)).toBe('text');
+        expect(BlockUtils.getBlockTextFromPosition(this.editor, 0)).toBe('Was a heading!');
       });
     });
   });
