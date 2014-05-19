@@ -36,16 +36,24 @@ SirTrevor.BlockReconfigurer = (function() {
       });
     },
 
-    addHeadingBlocks: function(paragraphs, addAt, editor) {
-      _.each(paragraphs, function(heading) {
+    _addBlocks: function(paragraphs, addAt, editor, blockType) {
+      _.each(paragraphs, function(paragraph) {
         // Ignore whitespace and <br> "paragraphs"
-        if (heading.innerHTML.match(this.WHITESPACE_AND_BR) === null) {
-          editor.createBlock('Heading', { text: heading.innerHTML }, addAt);
-          addAt += 1; // incremement index to account for each heading block
+        if (paragraph.innerHTML.match(this.WHITESPACE_AND_BR) === null) {
+          editor.createBlock(blockType, { text: paragraph.innerHTML }, addAt);
+          addAt += 1; // increment index to account for each block
         }
       }, this);
 
       return addAt;
+    },
+
+    addHeadingBlocks: function(paragraphs, addAt, editor) {
+      this._addBlocks(paragraphs, addAt, editor, 'Heading');
+    },
+
+    addQuoteBlocks: function(paragraphs, addAt, editor) {
+      this._addBlocks(paragraphs, addAt, editor, 'Quote');
     },
 
     /**
