@@ -74,7 +74,7 @@ SirTrevor.Editor = (function(){
       this._setEvents();
 
       SirTrevor.EventBus.on(this.ID + ":blocks:change_position", this.changeBlockPosition);
-      SirTrevor.EventBus.on("formatter:positon", this.formatBar.renderBySelection);
+      SirTrevor.EventBus.on("formatter:position", this.formatBar.renderBySelection);
       SirTrevor.EventBus.on("formatter:hide", this.formatBar.hide);
 
       this.$wrapper.prepend(this.fl_block_controls.render().$el);
@@ -172,7 +172,7 @@ SirTrevor.Editor = (function(){
       A block will have a reference to an Editor instance & the parent BlockType.
       We also have to remember to store static counts for how many blocks we have, and keep a nice array of all the blocks available.
     */
-    createBlock: function(type, data, render_at) {
+    createBlock: function(type, data, renderAt) {
       type = _.classify(type);
 
       if(this._blockLimitReached()) {
@@ -193,7 +193,7 @@ SirTrevor.Editor = (function(){
 
       var block = new SirTrevor.Blocks[type](data, this.ID);
 
-      this._renderInPosition(block.render().$el);
+      this._renderInPosition(block.render().$el, renderAt);
 
       this.listenTo(block, 'removeBlock', this.removeBlock);
 
@@ -275,8 +275,15 @@ SirTrevor.Editor = (function(){
       this.$wrapper.removeClass("st-outer--is-reordering");
     },
 
-    _renderInPosition: function(block) {
-      if (this.block_controls.current_container) {
+    _renderInPosition: function(block, renderAt) {
+      if (renderAt || renderAt === 0) {
+        var $blocks = this.$wrapper.find('.st-block');
+        if (renderAt >= $blocks.length) {
+          this.$wrapper.append(block);
+        } else {
+          $blocks.eq(renderAt).before(block);  
+        }
+      } else if (this.block_controls.current_container) {
         this.block_controls.current_container.after(block);
       } else {
         this.$wrapper.append(block);

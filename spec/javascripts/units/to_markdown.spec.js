@@ -126,21 +126,49 @@ describe("toMarkdown", function(){
     expect(markdown).toBe("test\\-something");
   });
 
-  it("strips whitepace from bolds", function(){
+  it("relocate whitespace from front within bolds", function(){
     var html = "<b> Test</b>",
         markdown = SirTrevor.toMarkdown(html, "Text");
 
-    expect(markdown).toBe("**Test**");
+    expect(markdown).toBe(" **Test**");
   });
 
-  it("strips whitepace from italics", function(){
+  it("relocate whitespace from end within bolds", function(){
+    var html = "<b>Test </b>",
+        markdown = SirTrevor.toMarkdown(html, "Text");
+
+    expect(markdown).toBe("**Test** ");
+  });
+
+  it("relocate whitespace from front and end within bolds", function(){
+    var html = "<b> Test </b>",
+        markdown = SirTrevor.toMarkdown(html, "Text");
+
+    expect(markdown).toBe(" **Test** ");
+  });
+
+  it("relocate whitespace from front within italics", function(){
     var html = "<i> Test</i>",
         markdown = SirTrevor.toMarkdown(html, "Text");
 
-    expect(markdown).toBe("_Test_");
+    expect(markdown).toBe(" _Test_");
   });
 
-  it("strips whitepace from links", function(){
+  it("relocate whitespace from end within italics", function(){
+    var html = "<i>Test </i>",
+        markdown = SirTrevor.toMarkdown(html, "Text");
+
+    expect(markdown).toBe("_Test_ ");
+  });
+
+  it("relocate whitespace from front and end within italics", function(){
+    var html = "<i> Test </i>",
+        markdown = SirTrevor.toMarkdown(html, "Text");
+
+    expect(markdown).toBe(" _Test_ ");
+  });
+
+  it("strips whitespace from links", function(){
     var html = "<a href='test'> test</a>",
         markdown = SirTrevor.toMarkdown(html, "Text");
 
